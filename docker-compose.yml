@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  balsain-wordpress:
+    build:
+      context: wordpress/
+      args:
+        WORDPRESS_VERSION: ${WORDPRESS_VERSION}
+    hostname: balsain-wordpress
+    container_name: balsain-wordpress
+    ports:
+      - 8080:80
+    volumes:
+      - type: bind
+        source: ./data/wordpress
+        target: /var/www/html
+    environment:
+      WORDPRESS_DB_HOST: balsain-wordpress-mysql
+      WORDPRESS_DB_USER: wordpressuser
+      WORDPRESS_DB_PASSWORD: wordpresspass
+      WORDPRESS_DB_NAME: wordpressdb
+    networks:
+      - balsain-wordpress-network
+
+  balsain-wordpress-mysql:
+    build:
+      context: mysql/
+      args:
+        MYSQL_VERSION: ${MYSQL_VERSION}
+    hostname: balsain-wordpress-mysql
+    container_name: balsain-wordpress-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes: 
+      - type: volume
+        source: balsain-wordpress-mysql
+        target: /var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpressdb
+      MYSQL_USER: wordpressuser
+      MYSQL_PASSWORD: wordpresspass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    networks:
+      - balsain-wordpress-network
+    depends_on:
+      - balsain-wordpress
+
+networks:
+ balsain-wordpress-network:
+    driver: bridge
+
+volumes:
+  balsain-wordpress-mysql:
